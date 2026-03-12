@@ -1,1 +1,14 @@
-# В этом месте вам необходимо: опишите GraphQL схему
+type Task {
+    id: ID!
+    name: String!
+    price: Float!
+}
+
+type Query {
+    tasks: [Task!]!
+    task(id: ID!): Task
+}
+
+type Mutation {
+    createTask(name: String!, price: Float!): Task!
+}
