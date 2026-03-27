@@ -1,16 +1,18 @@
 syntax = "proto3";
 
-// Опишите ваш пакет и сервис здесь
-// package example;
+package devices.v1;
 
-// service MyService {
-//   rpc MyMethod (MyRequest) returns (MyResponse);
-// }
+message DeviceRequest {
+    string id = 1;
+}
 
-// message MyRequest {
-//   string id = 1;
-// }
+message DeviceResponse {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    string serial = 4;
+}
 
-// message MyResponse {
-//   string result = 1;
-// }
+service DevicesService {
+    rpc GetDevice(DeviceRequest) returns (DeviceResponse);
+}

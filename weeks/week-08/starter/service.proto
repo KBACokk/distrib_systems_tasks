@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package events.v1;
+
+message EventRequest {
+    string id = 1;
+}
+
+message EventResponse {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    string serial = 4;
+}
+
+message SubscribeRequest {
+    repeated string ids = 1;
+}
+
+message EventUpdate {
+    string id = 1;
+    string title = 2;
+    string description = 3;
+    string event_type = 4;
+    int64 timestamp = 5;
+    string serial = 6;
+}
+
+service EventsService {
+    rpc GetEvent(EventRequest) returns (EventResponse);  
+    rpc SubscribeEvents(SubscribeRequest) returns (stream EventUpdate);
+}
