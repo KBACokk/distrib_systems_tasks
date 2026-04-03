@@ -1,2 +1,53 @@
-<!doctype html>
-<!-- В этом месте вам необходимо: реализуйте WebRTC клиент -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>tasks-s11</title>
+    <style>body { font: 14px mono; }</style>
+</head>
+<body>
+    <div id="out" style="height:200px; overflow:auto; border:1px solid"></div>
+    <input id="in" placeholder="Message..." disabled>
+    
+    <script>
+        const pc = new RTCPeerConnection({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
+        const ws = new WebSocket('ws://localhost:8181');
+        let dc;
+
+        const log = (txt) => document.getElementById('out').innerHTML += `<div>${txt}</div>`;
+
+        const setupDC = (chan) => {
+            dc = chan;
+            dc.onopen = () => document.getElementById('in').disabled = false;
+            dc.onmessage = e => log("Собеседник: " + e.data);
+        };
+
+        setupDC(pc.createDataChannel("chat"));
+        pc.ondatachannel = e => setupDC(e.channel);
+
+        pc.onicecandidate = e => e.candidate && ws.send(JSON.stringify({ice: e.candidate}));
+        
+        ws.onopen = () => pc.createOffer().then(d => pc.setLocalDescription(d)).then(() => 
+            ws.send(JSON.stringify({sdp: pc.localDescription})));
+
+        ws.onmessage = async (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.sdp) {
+                await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+                if (msg.sdp.type === 'offer') {
+                    const a = await pc.createAnswer();
+                    await pc.setLocalDescription(a);
+                    ws.send(JSON.stringify({sdp: pc.localDescription}));
+                }
+            } else if (msg.ice) await pc.addIceCandidate(new RTCIceCandidate(msg.ice));
+        };
+
+        document.getElementById('in').onkeypress = e => {
+            if (e.key === 'Enter') {
+                dc.send(e.target.value);
+                log("Вы: " + e.target.value);
+                e.target.value = '';
+            }
+        };
+    </script>
+</body>
+</html>
